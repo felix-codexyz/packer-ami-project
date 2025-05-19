@@ -1,42 +1,49 @@
-name: Packer AMI Build
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+   name: Packer AMI Build
 
-jobs:
-  build-ami:
-    runs-on: ubuntu-latest
+   on:
+     push:
+       branches:
+         - main
+     workflow_dispatch:
 
-    steps:
-      # Checkout the repository
-      - name: Checkout code
-        uses: actions/checkout@v4
+   jobs:
+     build-ami:
+       runs-on: ubuntu-latest
 
-      # Set up Packer
-      - name: Set up Packer
-        uses: hashicorp/setup-packer@v3
-        with:
-          version: "1.11.2"
+       steps:
+         # Checkout the repository
+         - name: Checkout code
+           uses: actions/checkout@v4
 
-      # Configure AWS credentials
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+         # Set up Packer
+         - name: Set up Packer
+           uses: hashicorp/setup-packer@v3
+           with:
+             version: "1.11.2"
 
-      # Validate Packer template
-      - name: Validate Packer Template
-        run: |
-          cd packer
-          packer validate -var-file=variables.pkrvars.hcl main.pkr.hcl
+         # Configure AWS credentials
+         - name: Configure AWS Credentials
+           uses: aws-actions/configure-aws-credentials@v4
+           with:
+             aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+             aws-region: us-east-1
 
-      # Build AMI with Packer
-      - name: Build AMI
-        run: |
-          cd packer
-          packer build -var-file=variables.pkrvars.hcl main.pkr.hcl
+         # Initialize Packer plugins
+         - name: Initialize Packer
+           run: |
+             cd packer
+             packer init main.pkr.hcl
+
+         # Validate Packer template
+         - name: Validate Packer Template
+           run: |
+             cd packer
+             packer validate -var-file=variables.pkrvars.hcl main.pkr.hcl
+
+         # Build AMI with Packer
+         - name: Build AMI
+           run: |
+             cd packer
+             packer build -var-file=variables.pkrvars.hcl main.pkr.hcl
